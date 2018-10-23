@@ -1,14 +1,17 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Ex01.Exercise where
 
-import Reflex
+import           Control.Monad (zipWithM)
+import qualified Data.Text     as Text
+import           Reflex
 
 #ifndef ghcjs_HOST_OS
-import Util.Run
+import           Util.Run
 #endif
 
-import Ex01.Common
-import Ex01.Run
+import           Ex01.Common
+import           Ex01.Run
 
 ex01 ::
   Reflex t =>
@@ -17,12 +20,16 @@ ex01 ::
   Outputs t
 ex01 money (Inputs eCarrot eCelery eCucumber eRefund) =
   let
+    products = [carrot, celery, cucumber]
+    events = [eCarrot, eCelery, eCucumber]
+    spends = (<$) <$> pCost <$> products
+    vends = (<$) <$> pName <$> products
     eVend =
-      never
+      mergeWith (<>) $ vends <*> events
     eSpend =
-      never
+      mergeWith (+) $ spends <*> events
     eChange =
-      never
+      ffilter (0 <) $ (money -) <$> eSpend
     eNotEnoughMoney =
       never
   in
