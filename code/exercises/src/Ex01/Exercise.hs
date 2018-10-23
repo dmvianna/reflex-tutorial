@@ -1,5 +1,5 @@
-{-# LANGUAGE CPP               #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP        #-}
+{-# LANGUAGE LambdaCase #-}
 module Ex01.Exercise where
 
 import           Control.Monad (zipWithM)
@@ -31,7 +31,10 @@ ex01 money (Inputs eCarrot eCelery eCucumber eRefund) =
     eChange =
       ffilter (0 <) $ (money -) <$> eSpend
     eNotEnoughMoney =
-      never
+     fmapMaybe f $ (0 >) <$> (money -) <$> eSpend
+        where
+          f True  = Just ()
+          f False = Nothing
   in
     Outputs eVend eSpend eChange eNotEnoughMoney
 
