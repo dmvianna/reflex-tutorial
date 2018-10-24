@@ -1,11 +1,8 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE CPP #-}
 module Ex01.Exercise where
 
-import           Control.Monad (zipWithM)
-import qualified Data.Text     as Text
+import           Data.Text   (Text)
 import           Reflex
-
 #ifndef ghcjs_HOST_OS
 import           Util.Run
 #endif
@@ -20,21 +17,19 @@ ex01 ::
   Outputs t
 ex01 money (Inputs eCarrot eCelery eCucumber eRefund) =
   let
-    products = [carrot, celery, cucumber]
-    events = [eCarrot, eCelery, eCucumber]
-    spends = (<$) <$> pCost <$> products
-    vends = (<$) <$> pName <$> products
+    events = [carrot <$ eCarrot
+             ,celery <$ eCelery
+             ,cucumber <$ eCucumber]
+    eName = pName <$> leftmost events
+    eCost = pCost <$> leftmost events
     eVend =
-      mergeWith (<>) $ vends <*> events
+      difference eName eNotEnoughMoney
     eSpend =
-      mergeWith (+) $ spends <*> events
+      ffilter (money >=) eCost
     eChange =
-      ffilter (0 <) $ (money -) <$> eSpend
+      money <$ eRefund
     eNotEnoughMoney =
-     fmapMaybe f $ (0 >) <$> (money -) <$> eSpend
-        where
-          f True  = Just ()
-          f False = Nothing
+      () <$ ffilter (money <) eCost
   in
     Outputs eVend eSpend eChange eNotEnoughMoney
 
