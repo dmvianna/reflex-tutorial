@@ -1,14 +1,14 @@
 {-# LANGUAGE CPP #-}
 module Ex02.Exercise where
 
-import Reflex
+import           Reflex
 
 #ifndef ghcjs_HOST_OS
-import Util.Run
+import           Util.Run
 #endif
 
-import Ex02.Common
-import Ex02.Run
+import           Ex02.Common
+import           Ex02.Run
 
 ex02 ::
   Reflex t =>
@@ -16,14 +16,30 @@ ex02 ::
   Outputs t
 ex02 (Inputs bMoney eCarrot eCelery eCucumber eRefund) =
   let
+    eProduct =
+      leftmost [
+      carrot   <$ eCarrot
+      , celery   <$ eCelery
+      , cucumber <$ eCucumber
+      ]
+    checkNotEnoughMoney m p =
+      if pCost p > m
+      then Just $ pCost p
+      else Nothing
+    checkError m p =
+      pCost p > m
+    eNotEnoughMoney =
+      attachWithMaybe checkNotEnoughMoney bMoney eProduct
+    eSale =
+      difference eProduct eNotEnoughMoney
     eVend =
-      never
+      pName <$> eSale
     eSpend =
-      never
+      pCost <$> eSale
     eChange =
-      never
+      tag bMoney eRefund
     eError =
-      never
+      NotEnoughMoney <$ attachWith checkError bMoney eProduct
   in
     Outputs eVend eSpend eChange eError
 
